@@ -1,38 +1,41 @@
 package ua.kpi.comsys.io8316;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
-public class MainActivity extends AppCompatActivity {
+public class DrawingFragment extends Fragment {
     private static final int NUMBER_OF__PAGES = 2;
-    private static final String[] PAGE_TITLES = new String[]{"General", "Drawing"};
-    private static final int[] TAB_ICONS = {R.drawable.ic_home, R.drawable.ic_drawing};
+    private static final String[] PAGE_TITLES = new String[]{"Graph", "Diagram"};
+    private static final int[] TAB_ICONS = {R.drawable.ic_graph, R.drawable.ic_diagram};
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ViewPager2 viewPager = findViewById(R.id.pager);
-        FragmentStateAdapter pagerAdapter = new MyPagerAdapter(this);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+        View view = inflater.inflate(R.layout.drawing_fragment, container, false);
+        ViewPager2 viewPager = view.findViewById(R.id.pager2);
+        FragmentStateAdapter pagerAdapter = new DrawingFragment.MyPagerAdapter(this);
         viewPager.setAdapter(pagerAdapter);
-        TabLayout tabLayout = findViewById(R.id.tab_layout);
+        TabLayout tabLayout = view.findViewById(R.id.tab_layout2);
         new TabLayoutMediator(tabLayout, viewPager,(tab, position) -> {
             tab.setText(PAGE_TITLES[position]);
             tab.setIcon(TAB_ICONS[position]);
         }).attach();
+        return view;
     }
 
     private static class MyPagerAdapter extends FragmentStateAdapter {
 
-        public MyPagerAdapter(FragmentActivity fa) {
-            super(fa);
+        public MyPagerAdapter(@NonNull Fragment fragment) {
+            super(fragment);
         }
 
         @NonNull
@@ -40,11 +43,11 @@ public class MainActivity extends AppCompatActivity {
         public Fragment createFragment(int position) {
             switch (position) {
                 case 1: {
-                    return new DrawingFragment();
+                    return new DrawingDiagramFragment();
                 }
                 case 0:
                 default:
-                    return new GeneralFragment();
+                    return new DrawingGraphFragment();
             }
         }
 
@@ -53,4 +56,5 @@ public class MainActivity extends AppCompatActivity {
             return NUMBER_OF__PAGES;
         }
     }
+
 }
