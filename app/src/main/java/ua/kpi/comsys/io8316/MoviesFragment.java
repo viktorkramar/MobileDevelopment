@@ -97,7 +97,6 @@ public class MoviesFragment extends Fragment {
             holder.posterView.setImageResource(movie.getPosterId());
             holder.titleView.setText(movie.getTitle());
             holder.yearView.setText(movie.getYear());
-            holder.imdbIdView.setText(movie.getImdbId());
             holder.typeView.setText(movie.getType());
         }
 
@@ -110,7 +109,6 @@ public class MoviesFragment extends Fragment {
             final ImageView posterView;
             final TextView titleView;
             final TextView yearView;
-            final TextView imdbIdView;
             final TextView typeView;
 
             ViewHolder(View view){
@@ -118,7 +116,6 @@ public class MoviesFragment extends Fragment {
                 posterView = view.findViewById(R.id.poster);
                 titleView = view.findViewById(R.id.title);
                 yearView = view.findViewById(R.id.year);
-                imdbIdView = view.findViewById(R.id.imdbId);
                 typeView = view.findViewById(R.id.type);
             }
         }

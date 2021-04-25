@@ -18,11 +18,4 @@ public class MoviesDto {
     public List<Movie> getMovies() {
         return movies;
     }
-
-    @Override
-    public String toString() {
-        return "MoviesDto{" +
-                "movies=" + movies +
-                '}';
-    }
 }
