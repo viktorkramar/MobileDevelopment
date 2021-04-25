@@ -11,9 +11,9 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int NUMBER_OF__PAGES = 2;
-    private static final String[] PAGE_TITLES = new String[]{"General", "Drawing"};
-    private static final int[] TAB_ICONS = {R.drawable.ic_home, R.drawable.ic_drawing};
+    private static final int NUMBER_OF__PAGES = 3;
+    private static final String[] PAGE_TITLES = new String[]{"General", "Drawing", "Movies"};
+    private static final int[] TAB_ICONS = {R.drawable.ic_home, R.drawable.ic_drawing, R.drawable.ic_movies};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +41,9 @@ public class MainActivity extends AppCompatActivity {
             switch (position) {
                 case 1: {
                     return new DrawingFragment();
+                }
+                case 2: {
+                    return new MoviesFragment();
                 }
                 case 0:
                 default:
