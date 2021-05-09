@@ -1,123 +1,132 @@
 package ua.kpi.comsys.io8316;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class MoviesFragment extends Fragment {
+    private List<Movie> movies;
+    private List<Movie> filteredMovies;
+    private MoviesAdapter adapter;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getMovies();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.movies_fragment, container, false);
-        try {
-            List<Movie> movies = getMovies();
-            RecyclerView recyclerView = view.findViewById(R.id.recycler_view);
-            MoviesAdapter adapter = new MoviesAdapter(movies);
-            recyclerView.setHasFixedSize(true);
-            recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-            recyclerView.setAdapter(adapter);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        RecyclerView recyclerView = view.findViewById(R.id.recycler_view);
+        filteredMovies = new ArrayList<>(movies);
+        adapter = new MoviesAdapter(filteredMovies);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
+        recyclerView.setAdapter(adapter);
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+
+        EditText editText = view.findViewById(R.id.edittext);
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                filter(s.toString());
+            }
+        });
+        FloatingActionButton button = view.findViewById(R.id.addingBtn);
+        button.setOnClickListener(v -> addMovie());
         return view;
     }
 
-    private List<Movie> getMovies() throws JsonProcessingException {
-        InputStream inputStream = getResources().openRawResource(R.raw.movies);
-        String moviesJson = new Scanner(inputStream).useDelimiter("\\A").next();
-        ObjectMapper objectMapper = new ObjectMapper();
-        MoviesDto moviesDto = objectMapper.readValue(moviesJson, MoviesDto.class);
-        List<Movie> movies = moviesDto.getMovies();
-        movies.forEach(movie -> {
-            String poster = movie.getPoster();
-            switch (poster) {
-                case "Poster_01.jpg":
-                    movie.setPosterId(R.drawable.poster_01);
-                    break;
-                case "Poster_02.jpg":
-                    movie.setPosterId(R.drawable.poster_02);
-                    break;
-                case "Poster_03.jpg":
-                    movie.setPosterId(R.drawable.poster_03);
-                    break;
-                case "Poster_05.jpg":
-                    movie.setPosterId(R.drawable.poster_05);
-                    break;
-                case "Poster_06.jpg":
-                    movie.setPosterId(R.drawable.poster_06);
-                    break;
-                case "Poster_07.jpg":
-                    movie.setPosterId(R.drawable.poster_07);
-                    break;
-                case "Poster_08.jpg":
-                    movie.setPosterId(R.drawable.poster_08);
-                    break;
-                case "Poster_10.jpg":
-                    movie.setPosterId(R.drawable.poster_10);
-                    break;
-                default:
-                    break;
-            }
+    private void addMovie() {
+        LayoutInflater inflater = LayoutInflater.from(this.getContext());
+        View v = inflater.inflate(R.layout.add_movie,null);
+        AlertDialog.Builder addDialog = new AlertDialog.Builder(this.getContext());
+        addDialog.setView(v);
+        addDialog.setPositiveButton("OK", (dialog, id) -> {
+            Movie movie = new Movie();
+            movie.setTitle(((EditText) v.findViewById(R.id.title)).getText().toString());
+            movie.setYear(((EditText) v.findViewById(R.id.year)).getText().toString());
+            movie.setType(((EditText) v.findViewById(R.id.type)).getText().toString());
+            movies.add(movie);
+            filter("");
+            dialog.cancel();
         });
-        return movies;
+        addDialog.setNegativeButton("Cancel", (dialog, id) -> dialog.cancel());
+        addDialog.create();
+        addDialog.show();
     }
 
-    private static class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.ViewHolder>{
-        private final List<Movie> movies;
-
-        MoviesAdapter(List<Movie> movies) {
-            this.movies = movies;
+    private void getMovies() {
+        try {
+            InputStream inputStream = getResources().openRawResource(R.raw.movies);
+            String moviesJson = new Scanner(inputStream).useDelimiter("\\A").next();
+            ObjectMapper objectMapper = new ObjectMapper();
+            MoviesDto moviesDto = objectMapper.readValue(moviesJson, MoviesDto.class);
+            movies = moviesDto.getMovies();
+            movies.forEach(Movie::setPosterId);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
         }
+    }
 
-        @NonNull
+    private void filter(String text) {
+        filteredMovies =
+                movies.stream().filter(movie -> movie.getTitle().toLowerCase().contains(text.toLowerCase()))
+                        .collect(Collectors.toList());
+        adapter.setMovies(filteredMovies);
+    }
+
+    ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
         @Override
-        public MoviesAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_card, parent, false);
-            return new ViewHolder(view);
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder,
+                              @NonNull RecyclerView.ViewHolder target) {
+            return false;
         }
 
         @Override
-        public void onBindViewHolder(MoviesAdapter.ViewHolder holder, int position) {
-            Movie movie = movies.get(position);
-            holder.posterView.setImageResource(movie.getPosterId());
-            holder.titleView.setText(movie.getTitle());
-            holder.yearView.setText(movie.getYear());
-            holder.typeView.setText(movie.getType());
-        }
-
-        @Override
-        public int getItemCount() {
-            return movies.size();
-        }
-
-        public static class ViewHolder extends RecyclerView.ViewHolder {
-            final ImageView posterView;
-            final TextView titleView;
-            final TextView yearView;
-            final TextView typeView;
-
-            ViewHolder(View view){
-                super(view);
-                posterView = view.findViewById(R.id.poster);
-                titleView = view.findViewById(R.id.title);
-                yearView = view.findViewById(R.id.year);
-                typeView = view.findViewById(R.id.type);
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            int position = viewHolder.getAbsoluteAdapterPosition();
+            switch (direction) {
+                case ItemTouchHelper.LEFT:
+                    Movie movie = filteredMovies.get(position);
+                    movies.remove(movie);
+                    filteredMovies.remove(movie);
+                    adapter.notifyItemRemoved(position);
+                    break;
+                case ItemTouchHelper.RIGHT:
+                    break;
             }
+
         }
-    }
+    };
 }
